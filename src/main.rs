@@ -24,7 +24,7 @@ fn print_banner() {
   / __ `/ __ \/ __ \/ ___/ __/ ___/ __ \/ / / / __/ _ \
  / /_/ / / / / /_/ (__  ) /_/ /  / /_/ / /_/ / /_/  __/
  \__, /_/ /_/\____/____/\__/_/   \____/\__,_/\__/\___/ 
-/____/                                                  v1.0.2
+/____/                                                  v1.0.3
 
                     [ Author : PwnedBytes0x1 ]
 "#;
@@ -93,19 +93,37 @@ async fn run_scan(args: cli::ScanArgs) {
     }
 
     // Parse target(s)
-    let targets: Vec<String> = if args.target == "-" {
+    let mut targets: Vec<String> = Vec::new();
+
+    if let Some(file) = &args.file {
+        match std::fs::read_to_string(file) {
+            Ok(content) => {
+                for line in content.lines() {
+                    let t = line.trim().to_string();
+                    if !t.is_empty() {
+                        targets.push(t);
+                    }
+                }
+            }
+            Err(e) => {
+                print_err(&format!("Failed to read target file: {}", e));
+                return;
+            }
+        }
+    }
+
+    if args.target.as_deref() == Some("-") {
         use std::io::{self, BufRead};
         let stdin = io::stdin();
-        stdin
-            .lock()
-            .lines()
-            .filter_map(|l| l.ok())
-            .map(|l| l.trim().to_string())
-            .filter(|l| !l.is_empty())
-            .collect()
-    } else {
-        vec![args.target.clone()]
-    };
+        for line in stdin.lock().lines().filter_map(|l| l.ok()) {
+            let t = line.trim().to_string();
+            if !t.is_empty() {
+                targets.push(t);
+            }
+        }
+    } else if let Some(t) = &args.target {
+        targets.push(t.clone());
+    }
 
     if targets.is_empty() {
         print_err("No targets specified");
@@ -217,7 +235,7 @@ async fn run_scan(args: cli::ScanArgs) {
 
     let report = ScanReport {
         tool: "ghostroute".into(),
-        version: "1.0.2".into(),
+        version: "1.0.3".into(),
         author: "PwnedBytes0x1".into(),
         timestamp: timestamp.clone(),
         target: targets.join(", "),

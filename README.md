@@ -514,7 +514,7 @@ This project is released under the **MIT License**. See [LICENSE](LICENSE) for t
 <p align="center">
   <sub>Built with ♥ by <a href="https://github.com/PwnedBytes0x1">PwnedBytes0x1</a></sub>
   <br>
-  <sub>ghostroute v1.0.2</sub>
+  <sub>ghostroute v1.0.3</sub>
   <br>
   <a href="https://github.com/PwnedBytes0x1/ghostroute">
     <img src="https://img.shields.io/github/stars/PwnedBytes0x1/ghostroute?style=social" alt="stars">

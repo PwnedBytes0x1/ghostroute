@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand, Args};
 
 #[derive(Parser)]
-#[command(name = "ghostroute", version = "1.0.2")]
+#[command(name = "ghostroute", version = "1.0.3")]
 #[command(about = "HTTP request smuggling detection & exploitation tool", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
@@ -18,7 +18,7 @@ pub enum Commands {
 
 #[derive(Args, Clone)]
 pub struct ScanArgs {
-    pub target: String,
+    pub target: Option<String>,
 
     #[arg(long, help = "Cookie(s) for authenticated scanning (e.g. 'session=abc123')")]
     pub cookie: Option<String>,
@@ -32,8 +32,11 @@ pub struct ScanArgs {
     #[arg(long, help = "Suppress banner/progress, output results only")]
     pub silent: bool,
 
-    #[arg(short = 'f', long = "output-format", default_value = "table", help = "Report format: html, json, yaml, table")]
+    #[arg(long = "output-format", default_value = "table", help = "Report format: html, json, yaml, table")]
     pub output_format: String,
+
+    #[arg(short = 'f', long = "file", help = "File with targets (one domain/subdomain per line)")]
+    pub file: Option<String>,
 
     #[arg(short = 'o', long = "output", help = "Output file path for report")]
     pub output: Option<String>,
