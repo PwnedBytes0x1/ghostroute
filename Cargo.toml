@@ -1,6 +1,6 @@
 [package]
 name = "ghostroute"
-version = "1.0.3"
+version = "1.0.4"
 description = "All-in-one HTTP request smuggling detection & exploitation tool"
 authors = ["PwnedBytes0x1"]
 edition = "2021"
