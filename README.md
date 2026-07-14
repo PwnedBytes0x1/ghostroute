@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,100:58a6ff&height=240&section=header&text=ghostroute&fontSize=60&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=HTTP%20Request%20Smuggling%20Toolkit&descAlignY=55&descSize=18">
-    <img alt="banner" src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,100:58a6ff&height=240&section=header&text=ghostroute&fontSize=60&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=HTTP%20Request%20Smuggling%20Toolkit&descAlignY=55&descSize=18">
-  </picture>
+  <img src="assets/banner.svg" alt="ghostroute" width="100%">
 </p>
 
 <p align="center">
