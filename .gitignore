@@ -1,0 +1,10 @@
+/target
+.DS_Store
+*.swp
+*.swo
+*~
+ghostroute.checkpoint.json
+checkpoint-*.json
+ghostroute.db
+*.log
+.env

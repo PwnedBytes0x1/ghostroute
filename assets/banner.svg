@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0d1117;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0a1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bc8cff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0.15" />
+      <stop offset="50%" style="stop-color:#bc8cff;stop-opacity:0.08" />
+      <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:0.15" />
+    </linearGradient>
+    <filter id="neon">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="grid-dots" x="0" y="0" width="100%" height="100%">
+      <fePattern id="dot-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="1" cy="1" r="0.5" fill="#1a1a3e" opacity="0.3" />
+      </fePattern>
+      <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="220" fill="url(#bg)" rx="12" />
+
+  <!-- Grid overlay -->
+  <rect width="900" height="220" fill="url(#dot-pattern)" rx="12" opacity="0.4" />
+
+  <!-- Glow bar top -->
+  <rect x="0" y="0" width="900" height="3" fill="url(#accent)" opacity="0.6" />
+
+  <!-- Glow bar left -->
+  <rect x="0" y="0" width="3" height="220" fill="url(#accent)" opacity="0.4" />
+
+  <!-- Content glow background -->
+  <rect x="100" y="40" width="700" height="140" rx="8" fill="url(#glow)" />
+
+  <!-- Terminal prompt -->
+  <text x="100" y="175" font-family="'Courier New', monospace" font-size="13" fill="#58a6ff" opacity="0.5">$ ./ghostroute scan https://target.com:443 --concurrency 16</text>
+
+  <!-- Ghost icon (simplified) -->
+  <g transform="translate(80, 65)" opacity="0.15">
+    <path d="M30 80 L30 20 Q30 0 50 0 L70 0 Q90 0 90 20 L90 80 L80 70 L70 80 L60 70 L50 80 L40 70 L30 80Z" fill="#58a6ff" />
+    <circle cx="42" cy="28" r="4" fill="#0a0a1a" />
+    <circle cx="62" cy="28" r="4" fill="#0a0a1a" />
+    <path d="M42 42 Q50 50 62 42" fill="none" stroke="#0a0a1a" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Title "ghostroute" -->
+  <text x="180" y="98" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="52" font-weight="800"
+        fill="url(#accent)" filter="url(#neon)" letter-spacing="4">ghostroute</text>
+
+  <!-- Subtitle -->
+  <text x="180" y="130" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16"
+        fill="#8b949e" letter-spacing="6" font-weight="300">HTTP REQUEST SMUGGLING TOOLKIT</text>
+
+  <!-- Version badge -->
+  <rect x="180" y="142" width="58" height="20" rx="4" fill="none" stroke="#30363d" stroke-width="1" />
+  <text x="209" y="156" font-family="'Courier New', monospace" font-size="11" fill="#8b949e"
+        text-anchor="middle">v1.0.0</text>
+
+  <!-- Status dots -->
+  <circle cx="790" cy="30" r="4" fill="#3fb950" opacity="0.8" />
+  <text x="800" y="34" font-family="'Courier New', monospace" font-size="10" fill="#3fb950" opacity="0.6">ready</text>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="217" width="900" height="3" fill="url(#accent)" opacity="0.6" />
+</svg>

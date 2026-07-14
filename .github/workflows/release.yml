@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-pc-windows-msvc
+          - aarch64-linux-android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install cross
+        run: cargo install cross
+      - name: Build
+        run: cross build --release --target ${{ matrix.target }}
+      - name: Prepare artifact
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/ghostroute* dist/
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghostroute-${{ matrix.target }}
+          path: dist/
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          pip install blake3 -q
+          python3 -c "
+import blake3, os, glob
+with open('checksums.blake3', 'w') as out:
+    for f in glob.glob('*/ghostroute*') + glob.glob('*/ghostroute.exe'):
+        h = blake3.blake3(open(f, 'rb').read()).hexdigest()
+        out.write(f'{h}  {os.path.basename(f)}\n')
+          "
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*
+          generate_release_notes: true
+          fail_on_unmatched_files: false
