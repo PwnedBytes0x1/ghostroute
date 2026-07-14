@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand, Args};
 
 #[derive(Parser)]
-#[command(name = "ghostroute", version = "1.0.0")]
+#[command(name = "ghostroute", version = "1.0.2")]
 #[command(about = "HTTP request smuggling detection & exploitation tool", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
@@ -32,7 +32,7 @@ pub struct ScanArgs {
     #[arg(long, help = "Suppress banner/progress, output results only")]
     pub silent: bool,
 
-    #[arg(long = "output-format", default_value = "table", help = "Report format: html, json, yaml, table")]
+    #[arg(short = 'f', long = "output-format", default_value = "table", help = "Report format: html, json, yaml, table")]
     pub output_format: String,
 
     #[arg(short = 'o', long = "output", help = "Output file path for report")]

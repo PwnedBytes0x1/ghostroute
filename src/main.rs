@@ -24,7 +24,7 @@ fn print_banner() {
   / __ `/ __ \/ __ \/ ___/ __/ ___/ __ \/ / / / __/ _ \
  / /_/ / / / / /_/ (__  ) /_/ /  / /_/ / /_/ / /_/  __/
  \__, /_/ /_/\____/____/\__/_/   \____/\__,_/\__/\___/ 
-/____/                                                  v1.0.0
+/____/                                                  v1.0.2
 
                     [ Author : PwnedBytes0x1 ]
 "#;
@@ -217,7 +217,7 @@ async fn run_scan(args: cli::ScanArgs) {
 
     let report = ScanReport {
         tool: "ghostroute".into(),
-        version: "1.0.0".into(),
+        version: "1.0.2".into(),
         author: "PwnedBytes0x1".into(),
         timestamp: timestamp.clone(),
         target: targets.join(", "),
@@ -237,7 +237,11 @@ async fn run_scan(args: cli::ScanArgs) {
             println!("{}", output::json::jsonl_line(result));
         }
     } else if let Some(path) = &args.output {
-        let format_name = &args.output_format;
+        let format_name = if path.ends_with(".html") && args.output_format == "table" {
+            "html"
+        } else {
+            &args.output_format
+        };
         match get_formatter(format_name) {
             Ok(formatter) => {
                 match formatter.format(&report) {
