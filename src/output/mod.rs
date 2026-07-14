@@ -23,6 +23,10 @@ pub struct ScanResult {
     pub cve_matches: Vec<String>,
     #[serde(default)]
     pub poc_generated: bool,
+    #[serde(default)]
+    pub poc_request: Option<String>,
+    #[serde(default)]
+    pub poc_response: Option<String>,
 }
 
 impl Default for ScanResult {
@@ -40,6 +44,8 @@ impl Default for ScanResult {
             waf_detected: None,
             cve_matches: Vec::new(),
             poc_generated: false,
+            poc_request: None,
+            poc_response: None,
         }
     }
 }
