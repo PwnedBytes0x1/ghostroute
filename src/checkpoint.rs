@@ -1,6 +1,5 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -34,18 +33,6 @@ impl Checkpoint {
     pub fn is_completed(&self, target: &str, variant: &str) -> bool {
         let key = format!("{}::{}", target, variant);
         self.completed.contains(&key)
-    }
-
-    pub fn remaining_targets(&self) -> Vec<String> {
-        let completed_set: HashSet<String> = self.completed.iter().cloned().collect();
-        self.targets
-            .iter()
-            .filter(|t| {
-                let key = format!("{}::{}", t, self.variant);
-                !completed_set.contains(&key)
-            })
-            .cloned()
-            .collect()
     }
 
     pub fn increment_probes(&mut self) {

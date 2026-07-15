@@ -23,8 +23,8 @@ pub async fn probe(
     let smuggled = b"GET /poisoned HTTP/1.1\r\nHost: attacker.com\r\n\r\n";
 
     let mut request = format!(
-        "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nConnection: keep-alive\r\nUser-Agent: ghostroute/1.0.0\r\nAccept: */*\r\n\r\n",
-        host, smuggled.len()
+        "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nConnection: keep-alive\r\nUser-Agent: ghostroute/{}\r\nAccept: */*\r\n\r\n",
+        host, smuggled.len(), env!("CARGO_PKG_VERSION")
     );
 
     if let Some(a) = auth {

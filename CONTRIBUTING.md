@@ -31,6 +31,7 @@
 - No unsafe code unless absolutely necessary and documented
 - All public items must have doc comments
 - Use `eprintln!` for progress/info, `println!` for pipeline output
+- The bypass engine covers 10 HideTechniques: Space, Tab, Wrap, LPad, Hop, SkipHop, Dupe, Under, NWrap, RWrap
 - Color: `[INF]` green, `[ERR]` red, `[WARN]` yellow, `[DET]` cyan
 
 ## Pull Request Process

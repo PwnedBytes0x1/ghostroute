@@ -13,21 +13,24 @@ mod update;
 use chrono::Utc;
 use clap::Parser;
 use colored::*;
+use std::io::Read;
 
 use cli::{Cli, Commands};
 use output::{OutputFormatter, ScanReport, ScanResult, ScanSummary};
 
 fn print_banner() {
-    let banner = r#"
-          __               __                   __     
-   ____ _/ /_  ____  _____/ /__________  __  __/ /____ 
-  / __ `/ __ \/ __ \/ ___/ __/ ___/ __ \/ / / / __/ _ \
- / /_/ / / / / /_/ (__  ) /_/ /  / /_/ / /_/ / /_/  __/
- \__, /_/ /_/\____/____/\__/_/   \____/\__,_/\__/\___/ 
-/____/                                                  v1.0.4
-
-                    [ Author : PwnedBytes0x1 ]
-"#;
+    let ver = env!("CARGO_PKG_VERSION");
+    let banner = format!(
+        "\n\
+          __               __                   __     \n\
+    ____ _/ /_  ____  _____/ /__________  __  __/ /____ \n\
+   / __ `/ __ \\/ __ \\/ ___/ __/ ___/ __ \\/ / / / __/ _ \\\n\
+  / /_/ / / / / /_/ (__  ) /_/ /  / /_/ / /_/ / /_/  __/\n\
+  \\__, /_/ /_/\\____/____/\\__/_/   \\____/\\__,_/\\__/\\___/ \n\
+/____/                                                  v{ver}\n\
+\n\
+                    [ Author : PwnedBytes0x1 ]\n"
+    );
     println!("{}", banner.bright_yellow());
 }
 
@@ -54,9 +57,11 @@ pub fn print_dbg(msg: &str) {
 #[tokio::main]
 async fn main() {
     colored::control::set_override(true);
-    let _ = rustls::crypto::CryptoProvider::install_default(
+    if rustls::crypto::CryptoProvider::install_default(
         rustls::crypto::ring::default_provider()
-    );
+    ).is_err() {
+        eprintln!("  {} Failed to install ring CryptoProvider — TLS may be unavailable", "[WARN]".bright_yellow());
+    }
     let cli = Cli::parse();
 
     match cli.command {
@@ -82,9 +87,6 @@ async fn run_scan(args: cli::ScanArgs) {
             if !args.silent {
                 print_info("Already up to date");
             }
-        }
-        Ok(update::UpdateStatus::Error(e)) => {
-            print_warn(&format!("Update check error: {}", e));
         }
         Err(e) => {
             print_warn(&format!("Update check failed: {}", e));
@@ -115,7 +117,7 @@ async fn run_scan(args: cli::ScanArgs) {
     if args.target.as_deref() == Some("-") {
         use std::io::{self, BufRead};
         let stdin = io::stdin();
-        for line in stdin.lock().lines().filter_map(|l| l.ok()) {
+        for line in stdin.lock().lines().map_while(Result::ok) {
             let t = line.trim().to_string();
             if !t.is_empty() {
                 targets.push(t);
@@ -146,7 +148,7 @@ async fn run_scan(args: cli::ScanArgs) {
 
     // Parse port / TLS
     let (port, tls) = match args.port {
-        Some(p) => (p, p == 443 || !args.no_tls),
+        Some(p) => (p, p == 443 && !args.no_tls),
         None => {
             if args.no_tls {
                 (80, false)
@@ -156,7 +158,7 @@ async fn run_scan(args: cli::ScanArgs) {
         }
     };
 
-    // Resume from checkpoint
+    // Resume or create checkpoint
     let checkpoint = if let Some(path) = &args.resume {
         match checkpoint::Checkpoint::load(path) {
             Ok(cp) => {
@@ -174,6 +176,12 @@ async fn run_scan(args: cli::ScanArgs) {
                 None
             }
         }
+    } else if args.checkpoint_interval > 0 && !targets.is_empty() {
+        let cp = checkpoint::Checkpoint::new(targets.clone(), args.variant.clone());
+        if !args.silent {
+            print_info("Checkpoint tracking enabled");
+        }
+        Some(cp)
     } else {
         None
     };
@@ -235,7 +243,7 @@ async fn run_scan(args: cli::ScanArgs) {
 
     let report = ScanReport {
         tool: "ghostroute".into(),
-        version: "1.0.4".into(),
+        version: env!("CARGO_PKG_VERSION").into(),
         author: "PwnedBytes0x1".into(),
         timestamp: timestamp.clone(),
         target: targets.join(", "),
@@ -250,12 +258,14 @@ async fn run_scan(args: cli::ScanArgs) {
     };
 
     // Output
-    if args.json {
-        for result in &report.results {
-            println!("{}", output::json::jsonl_line(result));
-        }
-    } else if let Some(path) = &args.output {
-        if path.ends_with(".html") {
+    if let Some(path) = &args.output {
+        if args.json || path.ends_with(".json") {
+            let json_str = serde_json::to_string_pretty(&report).unwrap_or_default();
+            match std::fs::write(path, &json_str) {
+                Ok(_) => if !args.silent { print_info(&format!("Report saved to {}", path)) }
+                Err(e) => { print_err(&format!("Failed to write output: {}", e)); }
+            }
+        } else if path.ends_with(".html") {
             let formatter = output::html::HtmlFormatter;
             match formatter.format(&report) {
                 Ok(output) => {
@@ -277,6 +287,10 @@ async fn run_scan(args: cli::ScanArgs) {
                 }
                 Err(e) => print_err(&format!("Format error: {}", e)),
             }
+        }
+    } else if args.json {
+        for result in &report.results {
+            println!("{}", output::json::jsonl_line(result));
         }
     } else {
         let formatter = output::table::TableFormatter;
@@ -308,9 +322,9 @@ async fn run_exploit(args: cli::ExploitArgs) {
         std::fs::read_to_string(path).unwrap_or_default().into_bytes()
     } else if args.interactive {
         print_info("Enter smuggled prefix (end with Ctrl+D):");
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input).ok();
-        input.into_bytes()
+        let mut input = Vec::new();
+        std::io::stdin().read_to_end(&mut input).ok();
+        input
     } else {
         // Default prefix: grab /admin
         b"GET /admin HTTP/1.1\r\nHost: localhost\r\n\r\n".to_vec()
@@ -338,7 +352,7 @@ async fn run_exploit(args: cli::ExploitArgs) {
     let config = exploit::ExploitConfig {
         target: target.clone(),
         port: args.port.unwrap_or(port),
-        tls: args.port.is_none_or(|p| p == 443),
+        tls: match args.port { None => true, Some(p) => p == 443 },
         variant: args.variant.clone(),
         prefix,
         suffix,
@@ -431,9 +445,6 @@ async fn run_update(args: cli::UpdateArgs) {
         Ok(update::UpdateStatus::UpToDate) => {
             print_info("Already up to date");
         }
-        Ok(update::UpdateStatus::Error(e)) => {
-            print_err(&format!("Update error: {}", e));
-        }
         Err(e) => {
             print_err(&format!("Update check failed: {}", e));
         }
@@ -454,20 +465,15 @@ async fn run_lab(args: cli::LabArgs) {
     match action {
         cli::LabAction::Up => {
             print_info("Starting test lab...");
-            let status = std::process::Command::new("docker-compose")
-                .args(["-f", "lab/docker-compose.yml", "up", "-d"])
-                .status();
+            let status = run_docker_compose(&["up", "-d"]);
             match status {
                 Ok(s) if s.success() => print_info("Lab is running"),
-                _ => print_warn("docker-compose not found. Install Docker and docker-compose."),
+                _ => print_warn("Docker Compose not found. Install Docker and docker-compose."),
             }
         }
         cli::LabAction::Down => {
             print_info("Stopping test lab...");
-            std::process::Command::new("docker-compose")
-                .args(["-f", "lab/docker-compose.yml", "down"])
-                .status()
-                .ok();
+            run_docker_compose(&["down"]).ok();
             print_info("Lab stopped");
         }
         cli::LabAction::Test => {
@@ -476,13 +482,23 @@ async fn run_lab(args: cli::LabArgs) {
         }
         cli::LabAction::Restart => {
             print_info("Restarting lab...");
-            std::process::Command::new("docker-compose")
-                .args(["-f", "lab/docker-compose.yml", "restart"])
-                .status()
-                .ok();
+            run_docker_compose(&["restart"]).ok();
             print_info("Lab restarted");
         }
     }
+}
+
+fn run_docker_compose(args: &[&str]) -> Result<std::process::ExitStatus, std::io::Error> {
+    // Try modern `docker compose` (v2) first, fall back to deprecated `docker-compose`
+    let mut cmd = std::process::Command::new("docker");
+    cmd.args(["compose", "-f", "lab/docker-compose.yml"]);
+    cmd.args(args);
+    cmd.status().or_else(|_| {
+        std::process::Command::new("docker-compose")
+            .args(["-f", "lab/docker-compose.yml"])
+            .args(args)
+            .status()
+    })
 }
 
 fn parse_target_to_host(target: &str) -> String {

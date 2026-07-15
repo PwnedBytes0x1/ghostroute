@@ -14,7 +14,6 @@ pub mod h2te;
 pub mod header_removal;
 pub mod parser_discrepancy;
 pub mod pause_desync;
-pub mod poc;
 pub mod te0;
 pub mod tecl;
 pub mod tete;
@@ -40,6 +39,7 @@ pub struct ScanConfig {
     pub concurrency: usize,
     pub variant: String,
     pub auth: Option<AuthStore>,
+    #[allow(dead_code)]
     pub proxy: Option<String>,
     pub checkpoint: Option<Checkpoint>,
     pub checkpoint_interval: u32,
@@ -58,7 +58,6 @@ pub async fn run_scan(config: ScanConfig) -> Result<Vec<ScanResult>, String> {
     let net_cfg = config.net_config();
     let mut probe_count: u64 = 0;
     let mut checkpoint = config.checkpoint;
-    let checkpoint_interval = config.checkpoint_interval;
 
     let variants: Vec<&str> = match config.variant.as_str() {
         "clte" => vec!["clte"],
@@ -134,11 +133,25 @@ pub async fn run_scan(config: ScanConfig) -> Result<Vec<ScanResult>, String> {
             "fuzz" => {
                 match fuzzer::run_fuzz(&net_cfg, config.auth.as_ref(), &config.silent).await {
                     Ok(fuzz_results) => {
+                        let count = fuzz_results.len();
                         results.extend(fuzz_results);
-                        return Ok(results);
+                        probe_count += count as u64;
                     }
-                    Err(e) => Err(e),
+                    Err(e) => {
+                        results.push(ScanResult {
+                            host: config.target.clone(),
+                            port: config.port,
+                            variant: "fuzz".to_string(),
+                            vulnerable: false,
+                            server: None,
+                            bypass: None,
+                            status_code: 0,
+                            details: Some(e),
+                            ..Default::default()
+                        });
+                    }
                 }
+                continue;
             }
             _ => Ok(ScanResult {
                 host: config.target.clone(),
@@ -178,7 +191,7 @@ pub async fn run_scan(config: ScanConfig) -> Result<Vec<ScanResult>, String> {
         if let Some(ref mut cp) = checkpoint {
             cp.mark_completed(&target_key);
             cp.increment_probes();
-            if probe_count.is_multiple_of(checkpoint_interval as u64) {
+            if probe_count.is_multiple_of(config.checkpoint_interval as u64) {
                 let _ = cp.save(None);
             }
         }

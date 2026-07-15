@@ -19,8 +19,8 @@ pub async fn probe(
     let smuggled_req = b"GET /admin HTTP/1.1\r\nHost: localhost\r\n\r\n";
 
     let mut request = format!(
-        "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-        host, smuggled_req.len()
+        "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+        host, smuggled_req.len(), env!("CARGO_PKG_VERSION")
     );
 
     if let Some(a) = auth {

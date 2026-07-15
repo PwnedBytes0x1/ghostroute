@@ -1,4 +1,3 @@
-use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::timeout;
 
@@ -18,18 +17,18 @@ pub async fn probe(
     }
 
     let baseline_req = h1::build_request("GET", "/", host, &[], b"");
-    let baseline = h1::send_request(cfg, &baseline_req, auth).await?;
+    let _baseline = h1::send_request(cfg, &baseline_req, auth).await?;
 
     let mut conn = crate::net::connect(cfg).await?;
 
-    let test_headers = [
+    let _test_headers = [
         ("Keep-Alive", "timeout=5, max=1000"),
         ("X-Custom-ID", "ghostroute-probe"),
     ];
 
-    let mut request = format!(
-        "GET / HTTP/1.1\r\nHost: {}\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=1000\r\nX-Custom-ID: ghostroute-probe\r\nUser-Agent: ghostroute/1.0.0\r\nAccept: */*\r\n\r\n",
-        host
+    let request = format!(
+        "GET / HTTP/1.1\r\nHost: {}\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=1000\r\nX-Custom-ID: ghostroute-probe\r\nUser-Agent: ghostroute/{}\r\nAccept: */*\r\n\r\n",
+        host, env!("CARGO_PKG_VERSION")
     );
     let mut req_bytes = request.into_bytes();
     if let Some(a) = auth {
@@ -98,7 +97,6 @@ pub async fn probe(
             }
             let host_name = cfg.host.split(':').next().unwrap_or(&cfg.host);
             return Ok(ScanResult {
-        
                 host: host_name.to_string(),
                 port: cfg.port,
                 variant: "header-removal".to_string(),
@@ -107,15 +105,13 @@ pub async fn probe(
                 bypass: Some("connection-eviction".into()),
                 status_code: 0,
                 details: Some(format!("Header removal detected: connection evicted after {} repeat requests (Keep-Alive stripped)", i + 1)),
-            ..Default::default()
-        
-    });
+                ..Default::default()
+            });
         }
     }
 
     let host_name = cfg.host.split(':').next().unwrap_or(&cfg.host);
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
         variant: "header-removal".to_string(),
@@ -141,7 +137,6 @@ pub async fn probe(
         } else {
             Some("No header removal detected".into())
         },
-            ..Default::default()
-        
+        ..Default::default()
     })
 }

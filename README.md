@@ -221,11 +221,12 @@ ghostroute scan https://example.com --variant fuzz
 # Connection poisoning daemon
 ghostroute exploit https://example.com --variant clte --count 50 --delay 10
 
-# Single-packet attack
-ghostroute exploit https://example.com --variant clte --prefix-request payload.txt --spa
+# Single-packet attack (coming in P2)
+#   ghostroute exploitation will directly use prefix/suffix for SPA-like delivery
+ghostroute exploit https://example.com --variant clte --prefix-request payload.txt
 
-# Response queue poisoning
-ghostroute exploit https://example.com --variant clte --prefix-request payload.txt --rqp
+# Response queue poisoning (coming in P2)
+ghostroute exploit https://example.com --variant clte --prefix-request payload.txt
 
 # Double-desync chain
 ghostroute exploit https://example.com --variant cl0-clte --prefix-request payload.txt
@@ -237,14 +238,17 @@ ghostroute exploit https://example.com --variant clte --chain "https://cache.exa
 ### Reports
 
 ```bash
-# HTML report (default)
-ghostroute scan https://example.com --output-format html -o report.html
+# HTML report
+ghostroute scan https://example.com --output report.html
 
 # JSON output (includes outcome, WAF, CVE, POC fields)
-ghostroute scan https://example.com --json --output results.json
+ghostroute scan https://example.com --json > results.jsonl
 
-# YAML output
-ghostroute scan https://example.com --output-format yaml -o report.yaml
+# JSON report file (output detects .json extension)
+ghostroute scan https://example.com --output results.json
+
+# Table format (default, printed to stdout)
+ghostroute scan https://example.com
 ```
 
 ### Test Lab

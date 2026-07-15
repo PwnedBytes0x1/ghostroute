@@ -50,8 +50,8 @@ pub async fn probe(
         };
 
         let headers = format!(
-            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: 5\r\nTransfer-Encoding: chunked\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-            host
+            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: 5\r\nTransfer-Encoding: chunked\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+            host, env!("CARGO_PKG_VERSION")
         );
         let mut req_bytes = headers.into_bytes();
         if let Some(a) = auth {
@@ -117,10 +117,9 @@ pub async fn probe(
 
     let host_name = cfg.host.split(':').next().unwrap_or(&cfg.host);
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
-        variant: "pause".to_string(),
+        variant: "pause-desync".to_string(),
         vulnerable,
         server: baseline.server.clone(),
         bypass: poison_type.clone(),
@@ -136,7 +135,6 @@ pub async fn probe(
         } else {
             None
         },
-            ..Default::default()
-        
+        ..Default::default()
     })
 }

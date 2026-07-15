@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
-const GH_REPO: &str = "PwnedBytes0x1/ghostroute";
 const GH_API: &str = "https://api.github.com/repos/PwnedBytes0x1/ghostroute/releases/latest";
 
 #[derive(serde::Deserialize)]
 pub struct GithubRelease {
     pub tag_name: String,
     pub assets: Vec<GithubAsset>,
+    #[allow(dead_code)]
     pub html_url: String,
 }
 
@@ -14,18 +14,8 @@ pub struct GithubRelease {
 pub struct GithubAsset {
     pub name: String,
     pub browser_download_url: String,
+    #[allow(dead_code)]
     pub size: u64,
-}
-
-#[derive(serde::Deserialize)]
-pub struct ChecksumFile {
-    pub checksums: Vec<ChecksumEntry>,
-}
-
-#[derive(serde::Deserialize)]
-pub struct ChecksumEntry {
-    pub file: String,
-    pub blake3: String,
 }
 
 pub enum UpdateStatus {
@@ -35,7 +25,6 @@ pub enum UpdateStatus {
         download_url: String,
         checksum: Option<String>,
     },
-    Error(String),
 }
 
 pub fn target_triple() -> String {

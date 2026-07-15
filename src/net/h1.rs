@@ -1,6 +1,4 @@
-use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
 use tokio::time::timeout;
 
 use super::{connect, NetConfig};
@@ -11,6 +9,7 @@ pub struct RawResponse {
     pub status_code: u16,
     pub headers: Vec<(String, String)>,
     pub body: Vec<u8>,
+    #[allow(dead_code)]
     pub raw: Vec<u8>,
     pub server: Option<String>,
 }
@@ -37,34 +36,6 @@ pub async fn send_request(
 
     loop {
         match timeout(cfg.timeout, conn.read(&mut tmp)).await {
-            Ok(Ok(0)) => break,
-            Ok(Ok(n)) => buf.extend_from_slice(&tmp[..n]),
-            Ok(Err(e)) => return Err(format!("Read error: {}", e)),
-            Err(_) => break,
-        }
-        if buf.len() > 1_000_000 {
-            break;
-        }
-    }
-
-    parse_response(&buf)
-}
-
-pub async fn send_raw_on_conn(
-    conn: &mut TcpStream,
-    request_bytes: &[u8],
-    timeout_dur: Duration,
-) -> Result<RawResponse, String> {
-    timeout(timeout_dur, conn.write_all(request_bytes))
-        .await
-        .map_err(|_| "Write timeout")?
-        .map_err(|e| format!("Write error: {}", e))?;
-
-    let mut buf = Vec::with_capacity(4096);
-    let mut tmp = [0u8; 8192];
-
-    loop {
-        match timeout(timeout_dur, conn.read(&mut tmp)).await {
             Ok(Ok(0)) => break,
             Ok(Ok(n)) => buf.extend_from_slice(&tmp[..n]),
             Ok(Err(e)) => return Err(format!("Read error: {}", e)),
@@ -142,8 +113,9 @@ pub fn build_request(
     }
 
     req.push_str("Connection: keep-alive\r\n");
-    req.push_str("User-Agent: ghostroute/1.0.0\r\n");
-    req.push_str("Accept: */*\r\n\r\n");
+    req.push_str("User-Agent: ghostroute/");
+    req.push_str(env!("CARGO_PKG_VERSION"));
+    req.push_str("\r\nAccept: */*\r\n\r\n");
 
     let mut bytes = req.into_bytes();
     bytes.extend_from_slice(body);
@@ -161,35 +133,4 @@ pub fn build_chunked_body(chunks: &[&[u8]]) -> Vec<u8> {
     body
 }
 
-pub fn build_smuggled_request(
-    host: &str,
-    smuggled_body: &[u8],
-    use_cl: bool,
-    cl_value: Option<usize>,
-) -> Vec<u8> {
-    let mut headers = vec![
-        ("Host", host),
-        ("User-Agent", "ghostroute/1.0.0"),
-        ("Accept", "*/*"),
-    ];
 
-    let cl_str;
-    if use_cl {
-        let cl = cl_value.unwrap_or(smuggled_body.len());
-        cl_str = Some(cl.to_string());
-        headers.push(("Content-Length", cl_str.as_ref().unwrap()));
-    } else {
-        cl_str = None;
-    }
-
-    let mut req = String::new();
-    req.push_str("POST / HTTP/1.1\r\n");
-    for (k, v) in &headers {
-        req.push_str(&format!("{}: {}\r\n", k, v));
-    }
-    req.push_str("Connection: keep-alive\r\n\r\n");
-
-    let mut bytes = req.into_bytes();
-    bytes.extend_from_slice(smuggled_body);
-    bytes
-}

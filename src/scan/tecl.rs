@@ -30,8 +30,8 @@ pub async fn probe(
     let fake_cl = 5; // CL says body is 5 bytes, but actual body is larger
 
     let mut tecl_req = format!(
-        "POST / HTTP/1.1\r\nHost: {}\r\nTransfer-Encoding: chunked\r\nContent-Length: {}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n{}",
-        host, fake_cl, String::from_utf8_lossy(&chunked_body)
+        "POST / HTTP/1.1\r\nHost: {}\r\nTransfer-Encoding: chunked\r\nContent-Length: {}\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n{}",
+        host, fake_cl, env!("CARGO_PKG_VERSION"), String::from_utf8_lossy(&chunked_body)
     );
 
     if let Some(a) = auth {

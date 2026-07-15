@@ -14,6 +14,7 @@ pub struct CveTemplate {
     pub reference: String,
 }
 
+#[allow(dead_code)]
 pub fn load_templates() -> Vec<CveTemplate> {
     vec![
         // HTTP/1.1 CL.TE / TE.CL
@@ -304,18 +305,4 @@ pub fn load_templates() -> Vec<CveTemplate> {
     ]
 }
 
-pub fn template_by_id(id: &str) -> Option<CveTemplate> {
-    load_templates().into_iter().find(|t| t.id.eq_ignore_ascii_case(id))
-}
 
-pub fn templates_by_variant(variant: &str) -> Vec<CveTemplate> {
-    load_templates().into_iter().filter(|t| t.variants.iter().any(|v| v == variant)).collect()
-}
-
-pub fn templates_by_year(year: u16) -> Vec<CveTemplate> {
-    load_templates().into_iter().filter(|t| t.year == year).collect()
-}
-
-pub fn all_variants_for_cve(id: &str) -> Vec<String> {
-    template_by_id(id).map(|t| t.variants).unwrap_or_default()
-}

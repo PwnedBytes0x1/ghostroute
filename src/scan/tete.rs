@@ -32,7 +32,7 @@ pub async fn probe(
             "POST / HTTP/1.1\r\nHost: {}\r\n{}",
             host, te_val
         );
-        request.push_str("\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n");
+        request.push_str(&format!("\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n", env!("CARGO_PKG_VERSION")));
         request.push_str(&String::from_utf8_lossy(&chunked_body));
 
         if let Some(a) = auth {

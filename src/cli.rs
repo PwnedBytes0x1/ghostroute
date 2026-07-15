@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand, Args};
 
 #[derive(Parser)]
-#[command(name = "ghostroute", version = "1.0.4")]
+#[command(name = "ghostroute", version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "HTTP request smuggling detection & exploitation tool", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]

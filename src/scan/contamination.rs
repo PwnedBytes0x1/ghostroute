@@ -1,6 +1,4 @@
 use std::time::Duration;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::time::timeout;
 
 use crate::auth::AuthStore;
 use crate::net::{h1, NetConfig};
@@ -11,6 +9,7 @@ pub struct ContaminationResult {
     pub clean: bool,
     pub head_pollution_detected: bool,
     pub stability_violations: u32,
+    #[allow(dead_code)]
     pub details: Vec<String>,
 }
 
@@ -32,10 +31,7 @@ pub async fn run_contamination_check(
     let mut resp = h1::send_request(cfg, &head_req, auth).await?;
     let head_status = resp.status_code;
 
-    let polluted = match head_status {
-        0 | 403 | 406 | 429 | 503 => true,
-        _ => false,
-    };
+    let polluted = matches!(head_status, 0 | 403 | 406 | 429 | 503);
 
     if polluted {
         details.push(format!(
@@ -109,7 +105,6 @@ pub async fn probe(
     let host_name = cfg.host.split(':').next().unwrap_or(&cfg.host);
 
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
         variant: "contamination".to_string(),
@@ -118,18 +113,19 @@ pub async fn probe(
         bypass: None,
         status_code: 0,
         details: Some(if result.clean {
-            "Contamination check passed: connection state stable".into()} else {
+            "Contamination check passed: connection state stable".into()
+        } else {
             format!(
                 "Contamination detected: {} stability violations, HEAD polluted: {}",
                 result.stability_violations,
                 result.head_pollution_detected
             )
         }),
-            ..Default::default()
-        
+        ..Default::default()
     })
 }
 
+#[allow(dead_code)]
 pub async fn validate_desync(
     cfg: &NetConfig,
     auth: Option<&AuthStore>,

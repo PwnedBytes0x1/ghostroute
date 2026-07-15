@@ -1,8 +1,8 @@
 use std::time::Duration;
+use tokio::net::TcpStream;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::MaybeTlsStream;
 use tokio_tungstenite::WebSocketStream;
-use tokio::net::TcpStream;
 
 pub type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 

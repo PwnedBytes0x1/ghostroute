@@ -28,8 +28,8 @@ pub async fn probe(
     chunked_body.extend_from_slice(b"0\r\n\r\n");
 
     let mut request = format!(
-        "POST / HTTP/1.1\r\nHost: {}\r\nTransfer-Encoding: chunked\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-        host
+        "POST / HTTP/1.1\r\nHost: {}\r\nTransfer-Encoding: chunked\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+        host, env!("CARGO_PKG_VERSION")
     );
 
     if let Some(a) = auth {

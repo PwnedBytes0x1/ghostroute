@@ -8,8 +8,7 @@ If you discover a security vulnerability in ghostroute, please report it private
 
 To report a vulnerability:
 
-1. Open a [GitHub Security Advisory](https://github.com/PwnedBytes0x1/ghostroute/security/advisories/new)
-2. Or email: security@ghostroute.dev
+Open a [GitHub Security Advisory](https://github.com/PwnedBytes0x1/ghostroute/security/advisories/new)
 
 You should receive a response within 48 hours. If not, please follow up.
 

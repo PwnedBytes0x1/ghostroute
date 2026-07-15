@@ -4,7 +4,7 @@ pub mod table;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScanResult {
     pub host: String,
     pub port: u16,
@@ -29,26 +29,7 @@ pub struct ScanResult {
     pub poc_response: Option<String>,
 }
 
-impl Default for ScanResult {
-    fn default() -> Self {
-        Self {
-            host: String::new(),
-            port: 0,
-            variant: String::new(),
-            vulnerable: false,
-            server: None,
-            bypass: None,
-            status_code: 0,
-            details: None,
-            outcome: None,
-            waf_detected: None,
-            cve_matches: Vec::new(),
-            poc_generated: false,
-            poc_request: None,
-            poc_response: None,
-        }
-    }
-}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanReport {
@@ -72,15 +53,8 @@ pub struct ScanSummary {
 
 pub trait OutputFormatter {
     fn format(&self, report: &ScanReport) -> Result<String, String>;
+    #[allow(dead_code)]
     fn extension(&self) -> &'static str;
 }
 
-pub fn get_formatter(name: &str) -> Result<Box<dyn OutputFormatter>, String> {
-    match name.to_lowercase().as_str() {
-        "json" => Ok(Box::new(json::JsonFormatter)),
-        "yaml" => Ok(Box::new(json::YamlFormatter)),
-        "html" => Ok(Box::new(html::HtmlFormatter)),
-        "table" => Ok(Box::new(table::TableFormatter)),
-        _ => Err(format!("Unknown formatter: {}. Options: json, yaml, html, table", name)),
-    }
-}
+

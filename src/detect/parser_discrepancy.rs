@@ -41,26 +41,6 @@ fn status_class(code: u16) -> &'static str {
     }
 }
 
-fn detect_waf(resp: &RawResponse) -> bool {
-    let body_lower = String::from_utf8_lossy(&resp.body).to_lowercase();
-    let status = resp.status_code;
-
-    if status == 403 || status == 406 || status == 493 {
-        return true;
-    }
-    if let Some(ref server) = resp.server {
-        let s = server.to_lowercase();
-        if s.contains("cloudflare") || s.contains("akamai") || s.contains("fastly") {
-            return true;
-        }
-    }
-    let waf_keywords = ["blocked", "waf", "security", "denied", "forbidden", "captcha", "challenge"];
-    if waf_keywords.iter().any(|k| body_lower.contains(k)) {
-        return true;
-    }
-    false
-}
-
 async fn send_with_classification(
     cfg: &NetConfig,
     request: &[u8],
@@ -71,9 +51,7 @@ async fn send_with_classification(
 
     match timeout(Duration::from_secs(cfg.timeout.as_secs().max(5)), h1::send_request(cfg, request, auth)).await {
         Ok(Ok(resp)) => {
-            if detect_waf(&resp) {
-                (PermutationOutcome::WafBlock, Some(resp))
-            } else if resp.status_code == 0 {
+            if resp.status_code == 403 || resp.status_code == 406 || resp.status_code == 493 {
                 (PermutationOutcome::Error, Some(resp))
             } else {
                 (PermutationOutcome::Match, Some(resp))
@@ -84,6 +62,7 @@ async fn send_with_classification(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_discrepancy_check(
     cfg: &NetConfig,
     host: &str,
@@ -175,6 +154,7 @@ pub async fn run_discrepancy_check(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn classify_outcome(
     status_pp: Option<u16>, _resp_pp: Option<&RawResponse>,
     status_mp: Option<u16>, _resp_mp: Option<&RawResponse>,

@@ -40,7 +40,7 @@ pub async fn probe(
     if let Ok(Ok(n)) = timeout(Duration::from_secs(5), stream.read(&mut tmp)).await { buf.extend_from_slice(&tmp[..n]) }
 
     let preface_detected = buf.starts_with(b"PRI") || buf.windows(8).any(|w| w == b"HTTP/2.0");
-    let settings_detected = buf.len() >= 4 && buf[3] == 0x04;
+    let settings_detected = buf.len() > 27 && buf[27] == 0x04;
 
     let vulnerable = preface_detected || settings_detected || !buf.is_empty();
 

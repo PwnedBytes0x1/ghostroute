@@ -36,8 +36,8 @@ pub async fn probe(
 
     let build_attack = |a: Option<&AuthStore>| -> Vec<u8> {
         let req_str = format!(
-            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {}\r\nTransfer-Encoding: chunked\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-            host, cl
+            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {}\r\nTransfer-Encoding: chunked\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+            host, cl, env!("CARGO_PKG_VERSION")
         );
         let mut bytes = req_str.into_bytes();
         bytes.extend_from_slice(body);

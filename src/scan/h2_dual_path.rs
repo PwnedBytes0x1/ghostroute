@@ -7,8 +7,6 @@ pub async fn probe(
     auth: Option<&AuthStore>,
     silent: &bool,
 ) -> Result<ScanResult, String> {
-    let host = &cfg.host;
-
     if !*silent {
         crate::print_dbg("H2 dual :path injection probe");
     }
@@ -79,7 +77,6 @@ pub async fn probe(
 
     let host_name = &cfg.host;
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
         variant: "h2-dual-path".to_string(),
@@ -88,11 +85,11 @@ pub async fn probe(
         bypass: success_path,
         status_code: response_status,
         details: if vulnerable {
-            Some("H2 dual :path: server concatenated or processed multiple :path pseudo-headers".into())} else {
+            Some("H2 dual :path: server concatenated or processed multiple :path pseudo-headers".into())
+        } else {
             None
         },
-            ..Default::default()
-        
+        ..Default::default()
     })
 }
 

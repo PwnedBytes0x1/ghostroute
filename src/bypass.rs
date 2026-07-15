@@ -8,13 +8,6 @@ pub struct BypassProbe {
     pub technique: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BypassResult {
-    pub probe: BypassProbe,
-    pub success: bool,
-    pub parser_detected: Option<String>,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HideTechnique {
     Space,
@@ -70,8 +63,8 @@ impl HideTechnique {
             HideTechnique::SkipHop => "Hop-by-hop with space in Connection value",
             HideTechnique::Dupe => "Duplicate headers (second-wins)",
             HideTechnique::Under => "Underscore replaces hyphen (CGI-style)",
-            HideTechnique::NWrap => "Newline in header name (CR-only body split)",
-            HideTechnique::RWrap => "Carriage return in header name (LF-only body split)",
+            HideTechnique::NWrap => "Newline in header name (LF-only body split)",
+            HideTechnique::RWrap => "Carriage return in header name (CR-only body split)",
         }
     }
 }
@@ -163,17 +156,4 @@ pub fn all_bypass_probes() -> Vec<BypassProbe> {
     probes
 }
 
-pub fn probe_bytes_for_name(name: &str) -> Option<Vec<u8>> {
-    all_bypass_probes()
-        .into_iter()
-        .find(|p| p.name == name)
-        .map(|p| p.header_bytes)
-}
 
-pub fn probes_by_technique(technique: &HideTechnique) -> Vec<BypassProbe> {
-    let tname = technique.name();
-    all_bypass_probes()
-        .into_iter()
-        .filter(|p| p.technique.as_deref() == Some(tname))
-        .collect()
-}

@@ -1,4 +1,3 @@
-use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::timeout;
 
@@ -49,8 +48,8 @@ pub async fn probe(
         let cl = smuggled_bytes.len();
 
         let request = format!(
-            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-            host, cl
+            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+            host, cl, env!("CARGO_PKG_VERSION")
         );
         let mut req_bytes = request.into_bytes();
         if let Some(a) = auth {
@@ -146,7 +145,7 @@ pub async fn probe(
         
         host: host_name.to_string(),
         port: cfg.port,
-        variant: "0cl".to_string(),
+        variant: "zero-cl".to_string(),
         vulnerable,
         server: baseline.server.clone(),
         bypass: gadget_used,
@@ -156,8 +155,7 @@ pub async fn probe(
         waf_detected: None,
         cve_matches: Vec::new(),
         poc_generated: false,
-            ..Default::default()
-        
+        ..Default::default()
     })
 }
 
@@ -177,8 +175,8 @@ async fn detect_timeout(
 
     let huge_body = vec![b'X'; 100_000];
     let request = format!(
-        "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-        host, 100_000
+        "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+        host, 100_000, env!("CARGO_PKG_VERSION")
     );
     let mut req_bytes = request.into_bytes();
     if let Some(a) = auth {
@@ -210,20 +208,19 @@ async fn detect_timeout(
 
     let host_name = cfg.host.split(':').next().unwrap_or(&cfg.host);
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
-        variant: "0cl".to_string(),
+        variant: "zero-cl".to_string(),
         vulnerable: responded_early,
         server: baseline.server.clone(),
         bypass: Some("timeout".into()),
         status_code: 0,
         details: if responded_early {
-            Some("0.CL timeout-based: server responded before reading full body (early-response)".into())} else {
+            Some("0.CL timeout-based: server responded before reading full body (early-response)".into())
+        } else {
             Some("0.CL timeout-based: no early response".into())
         },
-            ..Default::default()
-        
+        ..Default::default()
     })
 }
 
@@ -254,8 +251,8 @@ async fn detect_expect(
         }
 
         let request = format!(
-            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nExpect: {}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
-            host, smuggled.len(), expect_val
+            "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nExpect: {}\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n",
+            host, smuggled.len(), expect_val, env!("CARGO_PKG_VERSION")
         );
         let mut req_bytes = request.into_bytes();
         if let Some(a) = auth {
@@ -315,10 +312,9 @@ async fn detect_expect(
 
     let host_name = cfg.host.split(':').next().unwrap_or(&cfg.host);
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
-        variant: "0cl".to_string(),
+        variant: "zero-cl".to_string(),
         vulnerable,
         server: baseline.server.clone(),
         bypass: vulnerable_responses.first().map(|(label, _)| label.clone()),
@@ -332,7 +328,6 @@ async fn detect_expect(
         } else {
             None
         },
-            ..Default::default()
-        
+        ..Default::default()
     })
 }

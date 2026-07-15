@@ -18,7 +18,7 @@ pub async fn tls_connect(
         .with_no_client_auth();
 
     let connector = TlsConnector::from(Arc::new(config));
-    let connector = connector.with_alpn(vec![b"http/1.1".to_vec()]);
+    let connector = connector.with_alpn(vec![b"h2".to_vec(), b"http/1.1".to_vec()]);
 
     let dns_name = tokio_rustls::rustls::pki_types::DnsName::try_from(hostname.to_string())
         .map_err(|e| format!("Invalid hostname: {}", e))?;

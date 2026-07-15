@@ -1,4 +1,3 @@
-use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::timeout;
 
@@ -56,8 +55,8 @@ pub async fn probe(
         let _first = h1::parse_response(&buf).ok();
 
         let smuggled = format!(
-            "GET {} HTTP/1.1\r\nHost: {}\r\nUser-Agent: ghostroute/1.0.0\r\nAccept: */*\r\nConnection: keep-alive\r\n\r\n",
-            target_path, host
+            "GET {} HTTP/1.1\r\nHost: {}\r\nUser-Agent: ghostroute/{}\r\nAccept: */*\r\nConnection: keep-alive\r\n\r\n",
+            target_path, host, env!("CARGO_PKG_VERSION")
         );
         conn.write_all(smuggled.as_bytes()).await.ok();
 
@@ -79,8 +78,8 @@ pub async fn probe(
 
         let responses_raw = String::from_utf8_lossy(&buf3);
 
-        match canary {
-            &"status" => {
+        match *canary {
+            "status" => {
                 if let Ok(resp) = h1::parse_response(&buf3) {
                     response_status = resp.status_code;
                     if resp.status_code > 0 && resp.status_code != baseline.status_code {
@@ -95,8 +94,8 @@ pub async fn probe(
                     }
                 }
             }
-            &"reflect" => {
-                if responses_raw.contains("reflect") || responses_raw.contains(&"ghostroute_probe") {
+            "reflect" => {
+                if responses_raw.contains("reflect") || responses_raw.contains("ghostroute_probe") {
                     vulnerable = true;
                     success_canary = Some("reflect".into());
                     response_status = 200;
@@ -105,14 +104,12 @@ pub async fn probe(
                     }
                 }
             }
-            &"dns" => {
-                if responses_raw.len() > 100 {
-                    vulnerable = true;
-                    success_canary = Some("dns".into());
-                    response_status = 200;
-                    if !*silent {
-                        crate::print_det("Connection state: DNS canary triggered (non-empty response to external URL)");
-                    }
+            "dns" if responses_raw.len() > 100 => {
+                vulnerable = true;
+                success_canary = Some("dns".into());
+                response_status = 200;
+                if !*silent {
+                    crate::print_det("Connection state: DNS canary triggered (non-empty response to external URL)");
                 }
             }
             _ => {}

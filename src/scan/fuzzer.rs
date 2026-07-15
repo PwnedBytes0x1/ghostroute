@@ -75,13 +75,12 @@ pub async fn run_fuzz(
             eprintln!("  [DBG] Fuzz probe {}/{}: {}", i + 1, probes.len(), probe.name);
         }
 
-        let headers = vec![(&probe.header[..], &probe.value[..])];
         if !probe.body.is_empty() {
             // Body-based probe
             if probe.header == "Content-Length" {
                 let request = format!(
-                    "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/1.0.0\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n{}",
-                    cfg.host, probe.value, probe.body
+                    "POST / HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\nUser-Agent: ghostroute/{}\r\nConnection: keep-alive\r\nAccept: */*\r\n\r\n{}",
+                    cfg.host, probe.value, env!("CARGO_PKG_VERSION"), probe.body
                 );
                 match h1::send_request(cfg, request.as_bytes(), auth).await {
                     Ok(resp) => {
@@ -118,6 +117,7 @@ pub async fn run_fuzz(
                 }
             }
         } else {
+            let headers = vec![(&probe.header[..], &probe.value[..])];
             let request = h1::build_request("GET", "/", &cfg.host, &headers, b"");
             match h1::send_request(cfg, &request, auth).await {
                 Ok(resp) => {

@@ -9,6 +9,7 @@ use super::{tls, HttpConnection};
 
 pub struct H2Connection {
     pub send_request: SendRequest<bytes::Bytes>,
+    #[allow(dead_code)]
     pub connection_task: tokio::task::JoinHandle<()>,
 }
 
@@ -69,7 +70,7 @@ pub async fn send_h2_request(
         .method(method)
         .uri(path)
         .header(":authority", host)
-        .header("user-agent", "ghostroute/1.0.0")
+        .header("user-agent", concat!("ghostroute/", env!("CARGO_PKG_VERSION")))
         .header("accept", "*/*");
 
     for (k, v) in extra_headers {
@@ -136,7 +137,7 @@ pub async fn send_h2_request_raw_headers(
         }
     }
 
-    req_builder = req_builder.header("user-agent", "ghostroute/1.0.0");
+    req_builder = req_builder.header("user-agent", concat!("ghostroute/", env!("CARGO_PKG_VERSION")));
     req_builder = req_builder.header("accept", "*/*");
 
     for (k, v) in extra_headers {

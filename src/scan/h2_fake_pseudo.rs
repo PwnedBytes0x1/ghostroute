@@ -15,15 +15,13 @@ pub async fn probe(
     auth: Option<&AuthStore>,
     silent: &bool,
 ) -> Result<ScanResult, String> {
-    let host = &cfg.host;
-
     if !*silent {
         crate::print_dbg("H2 fake pseudo-header reflection probe");
     }
 
     let mut conn = h2::h2_connect(&cfg.host, cfg.port, cfg.tls, cfg.timeout.as_secs()).await?;
 
-    let (baseline_status, baseline_headers, _baseline_body) = h2::send_h2_request(
+    let (baseline_status, _baseline_headers, _baseline_body) = h2::send_h2_request(
         &mut conn.send_request,
         "GET",
         "/",
@@ -100,7 +98,6 @@ pub async fn probe(
 
     let host_name = &cfg.host;
     Ok(ScanResult {
-        
         host: host_name.to_string(),
         port: cfg.port,
         variant: "h2-fake-pseudo".to_string(),
@@ -109,11 +106,11 @@ pub async fn probe(
         bypass: reflected_pseudo,
         status_code: response_status,
         details: if vulnerable {
-            Some("H2 fake pseudo-header: server processed non-standard pseudo-header".into())} else {
+            Some("H2 fake pseudo-header: server processed non-standard pseudo-header".into())
+        } else {
             None
         },
-            ..Default::default()
-        
+        ..Default::default()
     })
 }
 
